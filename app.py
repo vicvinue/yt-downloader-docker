@@ -10,12 +10,11 @@ import subprocess
 import urllib.parse
 
 import yt_dlp
-import imageio_ffmpeg
 from flask import Flask, Blueprint, request, jsonify, Response, abort
 
 # ── config ────────────────────────────────────────────────────────────────────
 
-FFMPEG_BIN = imageio_ffmpeg.get_ffmpeg_exe()
+FFMPEG_BIN = "ffmpeg"
 EXTRA_OPTS  = {"remote_components": "ejs:github"}
 BASE_PATH   = os.environ.get("BASE_PATH", "/yt-downloader").rstrip("/")
 
@@ -41,7 +40,7 @@ class _SilentLogger:
 
 _SILENT = {
     "quiet": True, "no_warnings": True, "noprogress": True,
-    "logger": _SilentLogger(), "ffmpeg_location": FFMPEG_BIN,
+    "logger": _SilentLogger(),
 }
 
 def _best_audio(formats):
