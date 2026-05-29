@@ -1,6 +1,14 @@
 # yt-downloader-docker
 
-Build Docker de [YT-Downloader](https://github.com/vicvinue/yt-pydownloader) pensado para servidores. Los archivos se descargan de YouTube, se entregan al navegador vía streaming HTTP y se eliminan del servidor inmediatamente — **nada queda almacenado**.
+Build Docker de [YT-Downloader](https://github.com/vicvinue/yt-pydownloader) pensado para servidores. El archivo viaja directo desde los CDNs de YouTube hasta el navegador del usuario — **el servidor nunca toca disco**.
+
+## Cómo funciona
+
+1. yt-dlp extrae las URLs de los streams de YouTube (video y audio por separado).
+2. ffmpeg los descarga simultáneamente desde el CDN y los muxea al vuelo.
+3. El resultado se entrega al navegador vía streaming HTTP con `Content-Disposition: attachment`.
+
+No hay archivos temporales, no hay doble descarga. La barra de progreso nativa del navegador muestra el avance en tiempo real.
 
 ## Requisitos
 
@@ -16,7 +24,7 @@ cd yt-downloader-docker
 docker compose up -d
 ```
 
-El servidor queda escuchando en `127.0.0.1:7788` (solo localhost, el reverse proxy lo expone al exterior).
+El servidor queda escuchando en `127.0.0.1:7788` (solo localhost; el reverse proxy lo expone al exterior).
 
 ## Variables de entorno
 
@@ -28,8 +36,6 @@ El servidor queda escuchando en `127.0.0.1:7788` (solo localhost, el reverse pro
 
 ### Caddy
 
-Agrega esto dentro de tu bloque `server {}` en el `Caddyfile`:
-
 ```caddy
 @yt-downloader path /yt-downloader /yt-downloader/*
 handle @yt-downloader {
@@ -39,7 +45,7 @@ handle @yt-downloader {
 }
 ```
 
-> `flush_interval -1` es necesario para que SSE (barra de progreso en tiempo real) funcione correctamente.
+> `flush_interval -1` deshabilita el buffering de Caddy, necesario para que el streaming llegue inmediatamente al navegador.
 
 ### Nginx
 
@@ -55,23 +61,23 @@ location /yt-downloader {
 }
 ```
 
-## Cómo funciona
-
-1. El usuario pega un enlace de YouTube y elige el formato (MP3, WAV, video 720p/1080p/original).
-2. El servidor descarga el archivo a un directorio temporal en `/tmp`.
-3. Al completar, el archivo se entrega al navegador vía streaming HTTP con `Content-Disposition: attachment`.
-4. El archivo temporal se elimina automáticamente tras la descarga.
-5. Los archivos no descargados se limpian pasada **1 hora**.
-
 ## Formatos disponibles
 
 | Formato | Códec | Contenedor |
 |---|---|---|
 | Audio MP3 | MP3 (máxima calidad) | `.mp3` |
 | Audio WAV | WAV (sin pérdida) | `.wav` |
-| Video 720p | H.264 + AAC | `.mp4` |
-| Video 1080p | H.264 + AAC | `.mp4` |
-| Video original | AV1/VP9 + Opus | `.mkv` |
+| Video 720p | H.264 + AAC | `.mp4` fragmentado |
+| Video 1080p | H.264 + AAC | `.mp4` fragmentado |
+| Video original | mejor disponible | `.mkv` |
+
+## Actualizar
+
+```bash
+cd yt-downloader-docker
+git pull
+docker compose build && docker compose up -d
+```
 
 ## Aviso legal
 
