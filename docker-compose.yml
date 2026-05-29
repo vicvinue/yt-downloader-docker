@@ -1,0 +1,9 @@
+services:
+  yt-downloader:
+    build: .
+    container_name: yt-downloader
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:7788:7788"   # solo local, Nginx expone al exterior
+    environment:
+      - BASE_PATH=/yt-downloader
