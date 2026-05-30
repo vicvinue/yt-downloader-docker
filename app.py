@@ -394,13 +394,13 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
   <!-- Download started card -->
   <div class="card hidden" id="started-card">
     <div class="started-wrap">
-      <div class="started-icon">
+      <div class="started-icon" id="started-icon">
         <svg width="24" height="24" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
       </div>
-      <div class="started-title">Descarga en progreso</div>
+      <div class="started-title" id="started-title">Descarga en progreso</div>
       <div class="started-file" id="started-file"></div>
-      <div class="started-sub">El archivo llega directo a tu navegador.<br>Puedes ver el progreso en la barra de descargas.</div>
-      <div style="display:flex;gap:.5rem;margin-top:.25rem">
+      <div class="started-sub" id="started-sub">El archivo llega directo a tu navegador.<br>Puedes ver el progreso en la barra de descargas.</div>
+      <div id="started-actions" style="display:flex;gap:.5rem;margin-top:.25rem">
         <button class="btn-ghost" style="flex:1" onclick="reset()">Descargar otro</button>
         <button class="btn-primary" onclick="showInfoCard()">Otro formato</button>
       </div>
@@ -593,23 +593,75 @@ function selectFmt(el, key, label) {
 }
 
 // ── Download ──────────────────────────────────────────────────────────────────
-function startDownload() {
+function fmtBytes(b) {
+  if (b < 1048576) return (b / 1024).toFixed(0) + " KB";
+  return (b / 1048576).toFixed(1) + " MB";
+}
+
+async function startDownload() {
   if (!selectedFmt) return;
 
   const dlUrl = B + "/dl?url=" + encodeURIComponent(currentUrl)
                   + "&choice=" + encodeURIComponent(selectedFmt);
-
-  // window.location.href is the only reliable trigger on iOS/Android;
-  // the server's Content-Disposition: attachment handles the actual download.
-  window.location.href = dlUrl;
-
-  // show the started card with filename info
   const ext = selectedFmt === "audio_mp3" ? ".mp3"
             : selectedFmt === "audio_wav" ? ".wav"
             : selectedFmt === "video_original" ? ".mkv" : ".mp4";
-  const title = currentData ? currentData.title : "";
-  document.getElementById("started-file").textContent = title + ext;
+  const filename = (currentData ? currentData.title : "download") + ext;
+
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (!isMobile) {
+    // Desktop: direct navigation, browser download manager handles it natively
+    window.location.href = dlUrl;
+    document.getElementById("started-file").textContent = filename;
+    document.getElementById("started-title").textContent = "Descarga en progreso";
+    document.getElementById("started-sub").innerHTML = "El archivo llega directo a tu navegador.<br>Puedes ver el progreso en la barra de descargas.";
+    document.getElementById("started-actions").style.display = "flex";
+    showCards("started-card");
+    return;
+  }
+
+  // Mobile (iOS/Android): fetch → blob → <a download>
+  // window.location.href cancels the stream on WKWebView; blob URL is reliable.
+  document.getElementById("started-file").textContent = filename;
+  document.getElementById("started-title").textContent = "Descargando…";
+  document.getElementById("started-sub").textContent = "0 KB recibidos";
+  document.getElementById("started-actions").style.display = "none";
   showCards("started-card");
+
+  try {
+    const resp = await fetch(dlUrl);
+    if (!resp.ok) throw new Error(`Error del servidor (${resp.status})`);
+
+    const reader = resp.body.getReader();
+    const chunks = [];
+    let received = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length;
+      document.getElementById("started-sub").textContent = fmtBytes(received) + " recibidos…";
+    }
+
+    const blob = new Blob(chunks);
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+
+    document.getElementById("started-title").textContent = "¡Descarga lista!";
+    document.getElementById("started-sub").textContent = fmtBytes(received) + " — revisa tus descargas.";
+    document.getElementById("started-actions").style.display = "flex";
+  } catch (e) {
+    setError("Error al descargar: " + e.message);
+    showCards();
+  }
 }
 
 function showInfoCard() {
