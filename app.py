@@ -190,13 +190,17 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
   }
   .url-wrap input:focus     { border-color: #3b82f6; }
   .url-wrap input::placeholder { color: #9ca3af; }
-  .url-clear {
-    position: absolute; right: 0.5rem;
+  .url-clear, .url-paste {
+    position: absolute;
     background: none; border: none; padding: 0; cursor: pointer;
     color: #9ca3af; display: flex; align-items: center; transition: color .15s;
   }
-  .url-clear:hover { color: #6b7280; }
+  .url-clear  { right: 1.75rem; }
+  .url-paste  { right: 0.4rem; }
+  .url-clear:hover, .url-paste:hover { color: #6b7280; }
   .url-clear.hidden { display: none !important; }
+  /* hide paste button when input has content (clear button takes over) */
+  .url-wrap:has(input:not(:placeholder-shown)) .url-paste { display: none; }
 
   /* Clipboard hint */
   .clipboard-hint {
@@ -358,6 +362,9 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
         <button class="url-clear hidden" id="url-clear" onclick="clearInput()" title="Limpiar">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
+        <button class="url-paste" id="url-paste" onclick="pasteFromClipboard()" title="Pegar URL">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/></svg>
+        </button>
       </div>
       <button class="btn-primary" id="search-btn" onclick="fetchInfo()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
@@ -484,17 +491,36 @@ function isYouTubeUrl(s) {
 }
 
 async function tryClipboard() {
+  if (urlInput.value.trim()) return; // ya tiene contenido
   try {
     const text = await navigator.clipboard.readText();
-    if (isYouTubeUrl(text) && !urlInput.value.trim()) {
+    if (!isYouTubeUrl(text)) return;
+    urlInput.value = text.trim();
+    urlClear.classList.remove("hidden");
+    document.getElementById("clipboard-hint").classList.remove("hidden");
+    await fetchInfo();
+    document.getElementById("clipboard-hint").classList.add("hidden");
+  } catch (_) { /* permiso denegado o API no disponible */ }
+}
+
+async function pasteFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text.trim()) {
       urlInput.value = text.trim();
       urlClear.classList.remove("hidden");
-      document.getElementById("clipboard-hint").classList.remove("hidden");
-      await fetchInfo();
-      document.getElementById("clipboard-hint").classList.add("hidden");
+      setError(null);
+      if (isYouTubeUrl(text)) fetchInfo();
     }
-  } catch (_) { /* clipboard permission denied — no-op */ }
+  } catch (_) {
+    // API no disponible — dejar que el usuario pegue manualmente
+    urlInput.focus();
+  }
 }
+
+// Intentar en foco de ventana (usuario vuelve a la pestaña) y en foco del input
+window.addEventListener("focus", tryClipboard);
+urlInput.addEventListener("focus", tryClipboard);
 
 window.addEventListener("DOMContentLoaded", () => {
   tryClipboard();
