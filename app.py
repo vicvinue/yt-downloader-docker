@@ -353,7 +353,7 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
 <div class="container">
 
   <!-- URL card -->
-  <div class="card">
+  <div class="card" id="search-card">
     <div class="url-row">
       <div class="url-wrap">
         <input type="text" id="url-input"
@@ -405,6 +405,9 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
       Descargar
     </button>
+    <button class="btn-ghost" style="width:100%;margin-top:.5rem" onclick="reset()">
+      Nueva búsqueda
+    </button>
   </div>
 
   <!-- Download started card -->
@@ -416,8 +419,8 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
       <div class="started-title" id="started-title">Descarga en progreso</div>
       <div class="started-file" id="started-file"></div>
       <div class="started-sub" id="started-sub">El archivo llega directo a tu navegador.<br>Puedes ver el progreso en la barra de descargas.</div>
-      <div id="started-actions" style="display:flex;gap:.5rem;margin-top:.25rem">
-        <button class="btn-ghost" style="flex:1" onclick="reset()">Descargar otro</button>
+      <div id="started-actions" style="display:flex;gap:.5rem;margin-top:.25rem;width:100%">
+        <button class="btn-ghost" style="flex:1" onclick="reset()">Nueva búsqueda</button>
         <button class="btn-primary" onclick="showInfoCard()">Otro formato</button>
       </div>
     </div>
@@ -478,6 +481,9 @@ function showCards(...ids) {
   ["loading-card","info-card","started-card"]
     .forEach(id => document.getElementById(id).classList.add("hidden"));
   ids.forEach(id => document.getElementById(id).classList.remove("hidden"));
+  // Ocultar el input cuando hay resultados visibles, mostrarlo si no
+  const hasResults = ids.some(id => ["info-card","started-card"].includes(id));
+  document.getElementById("search-card").classList.toggle("hidden", hasResults);
 }
 
 function setError(msg) {
