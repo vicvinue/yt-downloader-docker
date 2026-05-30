@@ -15,7 +15,7 @@ from flask import Flask, Blueprint, request, jsonify, Response, abort
 # ── config ────────────────────────────────────────────────────────────────────
 
 FFMPEG_BIN = "ffmpeg"
-EXTRA_OPTS  = {"remote_components": "ejs:github"}
+EXTRA_OPTS  = {}  # Node.js disponible en el contenedor; yt-dlp lo detecta solo
 BASE_PATH   = os.environ.get("BASE_PATH", "/yt-downloader").rstrip("/")
 
 _info_cache: dict = {}
