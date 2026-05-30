@@ -60,47 +60,56 @@ def _best_video(formats, max_height):
         raise ValueError(f"Sin stream de video para height≤{max_height}")
     return max(pool, key=lambda f: f.get("height", 0) or 0)
 
-def _user_agent(formats):
-    return (formats or [{}])[0].get("http_headers", {}).get(
-        "User-Agent",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    )
+def _fmt_headers(fmt):
+    """Build ffmpeg -headers string from all HTTP headers yt-dlp extracted."""
+    hdrs = fmt.get("http_headers") or {}
+    if not hdrs:
+        hdrs = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    return "".join(f"{k}: {v}\r\n" for k, v in hdrs.items())
+
+# Reconnect flags so ffmpeg recovers from YouTube CDN hiccups
+_RECONNECT = ["-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "3"]
 
 def _build_pipeline(choice, info):
     formats = info.get("formats", [])
     title   = info.get("title", "download")
-    hdr     = f"User-Agent: {_user_agent(formats)}\r\n"
 
     if choice == "audio_mp3":
-        af = _best_audio(formats)
+        af  = _best_audio(formats)
+        hdr = _fmt_headers(af)
         cmd = [FFMPEG_BIN,
-               "-headers", hdr, "-i", af["url"],
+               *_RECONNECT, "-headers", hdr, "-i", af["url"],
                "-vn", "-f", "mp3", "-q:a", "0", "-loglevel", "quiet", "pipe:1"]
         return cmd, f"{title}.mp3", "audio/mpeg"
 
     elif choice == "audio_wav":
-        af = _best_audio(formats)
+        af  = _best_audio(formats)
+        hdr = _fmt_headers(af)
         cmd = [FFMPEG_BIN,
-               "-headers", hdr, "-i", af["url"],
+               *_RECONNECT, "-headers", hdr, "-i", af["url"],
                "-vn", "-f", "wav", "-loglevel", "quiet", "pipe:1"]
         return cmd, f"{title}.wav", "audio/wav"
 
     elif choice == "video_original":
-        vf = _best_video(formats, None)
-        af = _best_audio(formats)
+        vf   = _best_video(formats, None)
+        af   = _best_audio(formats)
+        vhdr = _fmt_headers(vf)
+        ahdr = _fmt_headers(af)
         cmd = [FFMPEG_BIN,
-               "-headers", hdr, "-i", vf["url"],
-               "-headers", hdr, "-i", af["url"],
+               *_RECONNECT, "-headers", vhdr, "-i", vf["url"],
+               *_RECONNECT, "-headers", ahdr, "-i", af["url"],
                "-c", "copy", "-f", "matroska", "-loglevel", "quiet", "pipe:1"]
         return cmd, f"{title}.mkv", "video/x-matroska"
 
     else:
         height = int(choice.split("_")[1])
-        vf = _best_video(formats, height)
-        af = _best_audio(formats)
+        vf   = _best_video(formats, height)
+        af   = _best_audio(formats)
+        vhdr = _fmt_headers(vf)
+        ahdr = _fmt_headers(af)
         cmd = [FFMPEG_BIN,
-               "-headers", hdr, "-i", vf["url"],
-               "-headers", hdr, "-i", af["url"],
+               *_RECONNECT, "-headers", vhdr, "-i", vf["url"],
+               *_RECONNECT, "-headers", ahdr, "-i", af["url"],
                "-c", "copy", "-f", "mp4",
                "-movflags", "frag_keyframe+empty_moov",
                "-loglevel", "quiet", "pipe:1"]
@@ -806,7 +815,7 @@ def route_dl():
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         try:
             while True:
-                chunk = proc.stdout.read(65536)
+                chunk = proc.stdout.read(262144)
                 if not chunk:
                     break
                 yield chunk
