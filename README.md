@@ -10,6 +10,14 @@ Build Docker de [YT-Downloader](https://github.com/vicvinue/yt-pydownloader) pen
 
 No hay archivos temporales, no hay doble descarga. La barra de progreso nativa del navegador muestra el avance en tiempo real.
 
+## Interfaz
+
+- **Auto-portapapeles** — al cargar la página detecta si hay una URL de YouTube en el portapapeles, la rellena y lanza la búsqueda automáticamente.
+- **Historial reciente** — las últimas 5 búsquedas quedan guardadas en localStorage; un clic relanza la búsqueda.
+- **Formatos agrupados** — secciones Audio / Video separadas con badges de calidad (SD · HD · FHD · 2K · 4K · 8K).
+- **Metadatos del video** — título, canal, número de vistas y duración (formato h:mm:ss para videos largos).
+- **ESC para limpiar** — limpia el input o resetea la vista.
+
 ## Requisitos
 
 - Docker
@@ -67,9 +75,13 @@ location /yt-downloader {
 |---|---|---|
 | Audio MP3 | MP3 (máxima calidad) | `.mp3` |
 | Audio WAV | WAV (sin pérdida) | `.wav` |
+| Video 480p | H.264 + AAC | `.mp4` fragmentado |
 | Video 720p | H.264 + AAC | `.mp4` fragmentado |
 | Video 1080p | H.264 + AAC | `.mp4` fragmentado |
-| Video original | mejor disponible | `.mkv` |
+| Video 1440p / 2160p / … | H.264 + AAC | `.mp4` fragmentado |
+| Video original | mejor codec disponible | `.mkv` |
+
+Los formatos disponibles se detectan automáticamente según lo que ofrezca el video; solo aparecen las resoluciones realmente presentes.
 
 ## Actualizar
 
