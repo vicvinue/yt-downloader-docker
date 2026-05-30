@@ -16,7 +16,13 @@ No hay archivos temporales, no hay doble descarga. La barra de progreso nativa d
 - **Formatos agrupados** — secciones Audio / Video separadas con badges de calidad (SD · HD · FHD · 2K · 4K · 8K).
 - **Metadatos del video** — título, canal, número de vistas y duración (formato h:mm:ss para videos largos).
 - **ESC para limpiar** — limpia el input o resetea la vista.
-- **Compatible con mobile** — descargas vía `window.location.href` para iOS/Android; input sin zoom en iOS.
+- **Compatible con mobile** — descargas vía fetch+blob en iOS/Android con progreso en tiempo real; input sin zoom en iOS.
+
+## Velocidad de descarga
+
+- **Headers completos a ffmpeg** — se pasan todos los headers HTTP que yt-dlp extrae (cookies, `Origin`, `Referer`, etc.), evitando el throttling de YouTube al stream DASH.
+- **Reconexión automática** — ffmpeg usa `-reconnect` para recuperarse si YouTube corta el stream a mitad de descarga.
+- **Chunks de 256 KB** — buffer de lectura ampliado para reducir overhead en la transferencia al navegador.
 
 ## Requisitos
 
