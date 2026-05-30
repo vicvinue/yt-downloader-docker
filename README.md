@@ -17,6 +17,12 @@ No hay archivos temporales, no hay doble descarga. La barra de progreso nativa d
 - **Metadatos del video** — título, canal, número de vistas y duración (formato h:mm:ss para videos largos).
 - **ESC para limpiar** — limpia el input o resetea la vista.
 - **Compatible con mobile** — descargas vía fetch+blob en iOS/Android con progreso en tiempo real; input sin zoom en iOS.
+- **Botones adaptados en mobile** — en pantallas pequeñas el botón Buscar muestra solo el ícono (doble ancho que el de pegar); en desktop mantiene el texto.
+
+## UX
+- **Oculta el input al mostrar resultados** — al buscar un video el campo de URL desaparece; el botón "Nueva búsqueda" limpia todo y lo vuelve a mostrar.
+- **Botón de pegar manual** — ícono clipboard junto al input; el usuario decide cuándo pegar, sin auto-detección que interfiera.
+- **Fuente Montserrat** — tipografía aplicada en toda la interfaz.
 
 ## Velocidad de descarga
 
