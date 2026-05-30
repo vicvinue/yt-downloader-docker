@@ -306,27 +306,6 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
     font-family: ui-monospace, monospace;
   }
 
-  /* History */
-  #history-card { padding: 1rem 1.375rem; }
-  .history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.625rem; }
-  .history-label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; }
-  .history-clear { background: none; border: none; padding: 0; font-size: 0.78rem; color: #9ca3af; cursor: pointer; transition: color .15s; }
-  .history-clear:hover { color: #ef4444; }
-  .history-list { display: flex; flex-direction: column; gap: 0.3rem; }
-  .history-item {
-    display: flex; align-items: center; gap: 0.625rem;
-    padding: 0.45rem 0.625rem; border-radius: 8px;
-    cursor: pointer; transition: background .12s; user-select: none;
-  }
-  .history-item:hover { background: #f9fafb; }
-  .history-thumb {
-    flex-shrink: 0; width: 48px; height: 27px;
-    border-radius: 4px; overflow: hidden; background: #e5e7eb;
-  }
-  .history-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .history-title { font-size: 0.8125rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #374151; }
-  .history-time  { font-size: 0.75rem; color: #9ca3af; flex-shrink: 0; }
-
   /* Footer */
   footer {
     position: fixed; bottom: 0; left: 0; right: 0;
@@ -381,15 +360,6 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
       <span>URL detectada del portapapeles — buscando…</span>
     </div>
     <div id="error-box" class="error-box hidden"></div>
-  </div>
-
-  <!-- History card -->
-  <div class="card hidden" id="history-card">
-    <div class="history-header">
-      <span class="history-label">Recientes</span>
-      <button class="history-clear" onclick="clearHistory()">Borrar historial</button>
-    </div>
-    <div class="history-list" id="history-list"></div>
   </div>
 
   <!-- Loading card -->
@@ -455,8 +425,6 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
 
 <script>
 const B = "__BASE_PATH__";
-const HISTORY_KEY = "yt-dl-history";
-const MAX_HISTORY = 5;
 
 let currentUrl  = "";
 let currentData = null;
@@ -469,7 +437,6 @@ const errorBox    = document.getElementById("error-box");
 const loadingCard = document.getElementById("loading-card");
 const infoCard    = document.getElementById("info-card");
 const startedCard = document.getElementById("started-card");
-const historyCard = document.getElementById("history-card");
 const urlClear    = document.getElementById("url-clear");
 
 // ── Input helpers ─────────────────────────────────────────────────────────────
@@ -521,61 +488,8 @@ async function tryClipboard() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  renderHistory();
   tryClipboard();
 });
-
-// ── History ───────────────────────────────────────────────────────────────────
-function loadHistory() {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); }
-  catch (_) { return []; }
-}
-
-function saveHistory(url, title, thumbnail) {
-  let hist = loadHistory().filter(h => h.url !== url);
-  hist.unshift({ url, title, thumbnail, ts: Date.now() });
-  if (hist.length > MAX_HISTORY) hist = hist.slice(0, MAX_HISTORY);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
-}
-
-function renderHistory() {
-  const hist = loadHistory();
-  if (!hist.length) { historyCard.classList.add("hidden"); return; }
-  historyCard.classList.remove("hidden");
-  const list = document.getElementById("history-list");
-  list.innerHTML = "";
-  hist.forEach(h => {
-    const el = document.createElement("div");
-    el.className = "history-item";
-    const ago = timeAgo(h.ts);
-    el.innerHTML = `
-      <div class="history-thumb">
-        <img src="${h.thumbnail||''}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover">
-      </div>
-      <span class="history-title">${escHtml(h.title)}</span>
-      <span class="history-time">${ago}</span>`;
-    el.addEventListener("click", () => {
-      urlInput.value = h.url;
-      urlClear.classList.remove("hidden");
-      setError(null);
-      fetchInfo();
-    });
-    list.appendChild(el);
-  });
-}
-
-function clearHistory() {
-  localStorage.removeItem(HISTORY_KEY);
-  historyCard.classList.add("hidden");
-}
-
-function timeAgo(ts) {
-  const s = Math.floor((Date.now() - ts) / 1000);
-  if (s < 60)   return "ahora";
-  if (s < 3600) return `${Math.floor(s/60)}m`;
-  if (s < 86400) return `${Math.floor(s/3600)}h`;
-  return `${Math.floor(s/86400)}d`;
-}
 
 function escHtml(s) {
   return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
@@ -636,8 +550,6 @@ async function fetchInfo() {
       Descargar`;
     showCards("info-card");
 
-    saveHistory(url, data.title, data.thumbnail);
-    renderHistory();
   } catch (e) {
     setError(e.message);
     showCards();

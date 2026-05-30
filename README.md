@@ -13,7 +13,6 @@ No hay archivos temporales, no hay doble descarga. La barra de progreso nativa d
 ## Interfaz
 
 - **Auto-portapapeles** — al cargar la página detecta si hay una URL de YouTube en el portapapeles, la rellena y lanza la búsqueda automáticamente.
-- **Historial reciente** — las últimas 5 búsquedas quedan guardadas en localStorage; un clic relanza la búsqueda.
 - **Formatos agrupados** — secciones Audio / Video separadas con badges de calidad (SD · HD · FHD · 2K · 4K · 8K).
 - **Metadatos del video** — título, canal, número de vistas y duración (formato h:mm:ss para videos largos).
 - **ESC para limpiar** — limpia el input o resetea la vista.
