@@ -798,7 +798,7 @@ def route_info():
     elif max_height:
         options.append({
             "key": "video_original", "group": "video",
-            "label": f"Original ({max_height}p, menor tamaño)",
+            "label": f"Original ({max_height}p)",
             "detail": "AV1/VP9 · MKV",
             "badge": _height_badge(max_height),
         })
