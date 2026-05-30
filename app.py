@@ -815,7 +815,7 @@ def route_dl():
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         try:
             while True:
-                chunk = proc.stdout.read(32768)
+                chunk = proc.stdout.read(262144)
                 if not chunk:
                     break
                 yield chunk
