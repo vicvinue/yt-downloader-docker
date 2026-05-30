@@ -23,6 +23,7 @@ No hay archivos temporales, no hay doble descarga. La barra de progreso nativa d
 - **Headers completos a ffmpeg** — se pasan todos los headers HTTP que yt-dlp extrae (cookies, `Origin`, `Referer`, etc.), evitando el throttling de YouTube al stream DASH.
 - **Reconexión automática** — ffmpeg usa `-reconnect` para recuperarse si YouTube corta el stream a mitad de descarga.
 - **Chunks de 256 KB** — buffer de lectura ampliado para reducir overhead en la transferencia al navegador.
+- **Node.js + EJS solver** — el Dockerfile incluye Node.js y yt-dlp lo usa junto al script `ejs:github` para descifrar el parámetro `n` de las URLs de YouTube. Sin esto, YouTube throttlea los streams a ~100 KB/s intencionalmente.
 
 ## Requisitos
 
