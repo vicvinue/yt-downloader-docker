@@ -16,6 +16,7 @@ No hay archivos temporales, no hay doble descarga. La barra de progreso nativa d
 - **Formatos agrupados** — secciones Audio / Video separadas con badges de calidad (SD · HD · FHD · 2K · 4K · 8K).
 - **Metadatos del video** — título, canal, número de vistas y duración (formato h:mm:ss para videos largos).
 - **ESC para limpiar** — limpia el input o resetea la vista.
+- **Compatible con mobile** — descargas vía `window.location.href` para iOS/Android; input sin zoom en iOS.
 
 ## Requisitos
 

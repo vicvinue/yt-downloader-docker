@@ -177,7 +177,7 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
     flex: 1;
     padding: 0.6rem 2.4rem 0.6rem 0.875rem;
     border: 1.5px solid #e5e7eb; border-radius: 9px;
-    font-size: 0.875rem; outline: none; transition: border-color .15s; min-width: 0;
+    font-size: 1rem; outline: none; transition: border-color .15s; min-width: 0;
   }
   .url-wrap input:focus     { border-color: #3b82f6; }
   .url-wrap input::placeholder { color: #9ca3af; }
@@ -596,12 +596,12 @@ function selectFmt(el, key, label) {
 function startDownload() {
   if (!selectedFmt) return;
 
-  const a = document.createElement("a");
-  a.href = B + "/dl?url=" + encodeURIComponent(currentUrl)
-              + "&choice=" + encodeURIComponent(selectedFmt);
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  const dlUrl = B + "/dl?url=" + encodeURIComponent(currentUrl)
+                  + "&choice=" + encodeURIComponent(selectedFmt);
+
+  // window.location.href is the only reliable trigger on iOS/Android;
+  // the server's Content-Disposition: attachment handles the actual download.
+  window.location.href = dlUrl;
 
   // show the started card with filename info
   const ext = selectedFmt === "audio_mp3" ? ".mp3"
