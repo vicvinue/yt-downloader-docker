@@ -339,10 +339,9 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
   .hidden { display: none !important; }
 
   @media (max-width: 480px) {
-    #search-btn { padding: 0.6rem; width: calc(var(--paste-w) * 2); }
-    #search-btn span { display: none; }
-    .btn-paste  { --paste-w: 2.5rem; width: var(--paste-w); justify-content: center; }
-    #search-btn { justify-content: center; }
+    .btn-paste          { width: 2.75rem; flex-shrink: 0; justify-content: center; padding: 0.6rem 0; }
+    #search-btn         { width: 5.5rem;  flex-shrink: 0; justify-content: center; padding: 0.6rem 0; }
+    #search-btn span    { display: none; }
   }
 </style>
 </head>
